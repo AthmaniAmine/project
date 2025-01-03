@@ -16,7 +16,7 @@ const copyUserToArtisan = async (req, res) => {
   try {
     // Fetch data from the utilisateurs table
     const userData = await pool.query(
-      'SELECT nom, prenom, email, id FROM utilisateurs WHERE id = $1',
+      'SELECT nom, prenom, email, id ,photo_de_profil  FROM utilisateurs WHERE id = $1',
       [req.user.id]
     );
 
@@ -25,15 +25,15 @@ const copyUserToArtisan = async (req, res) => {
     }
 
     // Destructure the fetched data
-    const { nom, prenom, email, id } = userData.rows[0];
+    const { nom, prenom, email, id ,photo_de_profil } = userData.rows[0];
 
-    console.log('Fetched user data:', { nom, prenom, email, id }); // Debugging log
+    console.log('Fetched user data:', { nom, prenom, email, id ,photo_de_profil}); // Debugging log
 
     // Insert data into the profilsartisans table
     await pool.query(
-      `INSERT INTO profilsartisans (nom, prenom, email, id)
+      `INSERT INTO profilsartisans (nom, prenom, email, id , photo_de_profil)
        VALUES ($1, $2, $3, $4)`,
-      [nom, prenom, email, id]
+      [nom, prenom, email, id , photo_de_profil]
     );
 
     res.status(200).json({ message: 'Data copied successfully' });

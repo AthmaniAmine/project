@@ -10,7 +10,7 @@ const uploadcertificates = async (req, res) => {
     console.log(file.filename)
     try {
       
-      filePath= `${req.protocol}://${req.get('host')}/upload/${file.filename }`
+      filePath= `${req.protocol}://${req.get('host')}/uploads/${file.filename }`
         const projectResult = await pool.query(
           `INSERT INTO certificates (ArtisanID, certificatename, Description, FilePath)
            VALUES ($1, $2, $3, $4)

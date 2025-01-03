@@ -10,7 +10,7 @@ const uploadPhotos = async (req, res) => {
   console.log(file.filename)
   try {
     
-    imagePath= `${req.protocol}://${req.get('host')}/upload/${file.filename }`
+    imagePath= `${req.protocol}://${req.get('host')}/uploads/${file.filename }`
       const projectResult = await pool.query(
         `INSERT INTO Portfolio (ArtisanID, ProjectName, Description, ImageURL)
          VALUES ($1, $2, $3, $4)

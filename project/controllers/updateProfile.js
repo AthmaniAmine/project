@@ -36,4 +36,33 @@ const submitForm = async (req, res) => {
   }
 };
 
-module.exports = { submitForm };
+const updateProfilePicture= async (req , res)=>{
+try{
+  if (!req.user || !req.user.id) {
+
+    console.log("unauthorized")
+    return res.status(401).json({ status: "error", error: "Unauthorized" });
+}
+
+  const file = req.file 
+  const profilePicturePath = `${req.protocol}://${req.get('host')}/uploads/${file.filename }`
+  const query = 'UPDATE profilsartisans SET photo_de_profil = ? WHERE id = ?';
+  const query2 = 'UPDATE utilisateurs SET photo_de_profil = ? WHERE id = ?';
+
+  if (req.user.type_utilisateur == "artisan"){
+    await db.query(query, [profilePicturePath, req.user.id]);
+    await db.query(query2, [profilePicturePath, req.user.id])
+  }else{
+    await db.query(query2, [profilePicturePath, req.user.id])
+  }
+  res.status(200).json({ message: 'Profile picture updated successfully', profilePicturePath });
+}catch(err){
+  console.error('Error updating profile picture:', error);
+        res.status(500).json({ message: 'Failed to update profile picture' });
+}
+}
+
+
+
+
+module.exports = { submitForm , updateProfilePicture };
