@@ -3,7 +3,7 @@ const pool = require('../db/index');
 
 // Function to send a devis
 const sendDevis = async (req, res) => {
-  const { adresse, telephone, cout_max, type_service, date_limite, nom_projet } = req.body;
+  const { selectedWilaya, selectedType, phoneNumber, maxCost, deadline, projectName , projectDescription} = req.body;
 
   if (!req.user || !req.user.id) {
       console.log("Unauthorized");
@@ -14,7 +14,7 @@ const sendDevis = async (req, res) => {
       // Step 1: Get the ServiceID based on the service name (TypeService)
       const serviceResult = await pool.query(
           `SELECT id FROM services WHERE nom = $1`,
-          [type_service]
+          [selectedType]
       );
 
       if (serviceResult.rows.length === 0) {
@@ -25,10 +25,10 @@ const sendDevis = async (req, res) => {
 
       // Step 2: Insert the devis into the DemandeDevis table
       const devisResult = await pool.query(
-          `INSERT INTO DemandeDevis (ClientID, Adresse, Telephone, CoutMax, ServiceID, typeservice, DateLimite, NomProjet)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          `INSERT INTO DemandeDevis (ClientID, Adresse, Telephone, CoutMax, ServiceID, typeservice, DateLimite, NomProjet , description)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8 ,$9)
            RETURNING *`,
-          [req.user.id, adresse, telephone, cout_max, service_id, type_service, date_limite, nom_projet]
+          [req.user.id, selectedWilaya,phoneNumber, maxCost, service_id,selectedType,  deadline, projectName , projectDescription]
       );
 
       const devis_id = devisResult.rows[0].devisid;
@@ -65,7 +65,7 @@ const getDevisForArtisan = async (req, res) => {
     try {
         // Step 1: Get the ServiceID from the ProfilsArtisans table based on the ArtisanID
         const artisanResult = await pool.query(
-            `SELECT service_id FROM profilsartisans WHERE id = $1`,
+            `SELECT service_id , wilaya FROM profilsartisans WHERE id = $1`,
             [req.user.id]
         );
 
@@ -74,13 +74,26 @@ const getDevisForArtisan = async (req, res) => {
         }
 
         const service_id = artisanResult.rows[0].service_id;
-
+        const wilaya =artisanResult.rows[0].wilaya
         // Step 2: Get all devis that match the ServiceID and have not been viewed or deleted by the specific artisan
         const devisResult = await pool.query(`
-            SELECT d.* FROM DemandeDevis d
-            LEFT JOIN ArtisanDevisStatus ads ON d.DevisID = ads.DevisID AND ads.ArtisanID = $1
-            WHERE d.ServiceID = $2 AND (ads.Status = 'Pending' OR ads.Status = 'Viewed')
-        `, [req.user.id, service_id]);
+            SELECT 
+                d.*, 
+                u.nom , 
+                u.prenom , 
+                u.photo_de_profil 
+            FROM 
+                DemandeDevis d
+            LEFT JOIN 
+                ArtisanDevisStatus ads ON d.DevisID = ads.DevisID AND ads.ArtisanID = $1
+            LEFT JOIN 
+                utilisateurs u ON d.clientID = u.id
+            WHERE 
+                d.ServiceID = $2 
+                AND d.Adresse = $3 
+                AND (ads.Status = 'Pending' OR ads.Status = 'Viewed')
+        `, [req.user.id, service_id, wilaya]);
+        console.log("devis de l'artisan",devisResult.rows)
 
         return res.status(200).json(devisResult.rows);
     } catch (err) {
@@ -341,6 +354,27 @@ const markPendingAsViewed = async (req, res) => {
         return res.status(500).json({ status: "error", error: "Error marking pending devis as viewed" });
     }
 };
+const getDevisByUserId = async (req, res) => {
+    if (!req.user || !req.user.id) {
+        console.log("Unauthorized");
+        return res.status(401).json({ status: "error", error: "Unauthorized" });
+    }
+
+    try {
+        // Step 1: Get all devis for the authenticated user (client)
+        const devisResult = await pool.query(
+            `SELECT * FROM DemandeDevis WHERE ClientID = $1`,
+            [req.user.id]
+        );
+
+        // Step 2: Return the list of devis
+        return res.status(200).json(devisResult.rows);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ status: "error", error: "Error fetching devis by user ID" });
+    }
+};
+
 
 module.exports = {
     sendDevis,
@@ -354,5 +388,6 @@ module.exports = {
     getDevisById,
     getDevisProposalsById,
     getPendingNotifications,
-    markPendingAsViewed
+    markPendingAsViewed,
+    getDevisByUserId
 };

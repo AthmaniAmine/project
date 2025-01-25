@@ -9,10 +9,9 @@ const loggedin = async (req, res, next) => {
       
       const decoded = await promisify(jwt.verify)(req.cookies.userSave, process.env.JWT_SECRET);
       
-      console.log(decoded)
       const result = await pool.query('SELECT * FROM utilisateurs WHERE id = $1', [decoded.id]);
       const user = result.rows[0];
-      console.log(user)
+      
 
       if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });

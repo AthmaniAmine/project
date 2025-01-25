@@ -38,4 +38,7 @@ router.get('/get_pending_notifications',loggedin, devisController.getPendingNoti
 // Mark pending devis as viewed
 router.post('/mark_pending_as_viewed', loggedin,devisController.markPendingAsViewed);
 
+
+
+router.get('/get_devis_by_user_id', loggedin, devisController.getDevisByUserId);
 module.exports = router;

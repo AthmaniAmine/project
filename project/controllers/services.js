@@ -7,12 +7,13 @@ const getArtisansByServiceId = async (req, res) => {
   try {
     // Query to fetch artisans based on service_id
     const result = await pool.query(
-      'SELECT * FROM profilsartisans WHERE service_id = $1',
+      'SELECT * FROM services WHERE id = $1',
       [service_id]
     );
 
     // Return the results
-    res.status(200).json(result.rows);
+    
+    res.status(200).json(result.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'An error occurred while fetching artisans' });
@@ -42,4 +43,22 @@ const searchServices = async (req, res) => {
     }
   };
 
-module.exports = { getArtisansByServiceId ,searchServices };
+  const getServices = async (req, res) => {
+ 
+  
+    try {
+
+      const result = await pool.query(
+        'SELECT * FROM services',
+       
+      );
+  
+     console.log(result.rows)
+      res.status(200).json(result.rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred while fetching artisans' });
+    }
+  };
+
+module.exports = {getServices, getArtisansByServiceId ,searchServices };

@@ -56,7 +56,7 @@ const registerUser = async (req, res) => {
 
   try {
     const otp =  randomstring.generate({
-      length: 5,
+      length: 6,
       charset: 'numeric'
     });
     const query = `
@@ -121,7 +121,7 @@ const verifyOtpAndRegister = async (req, res) => {
 
     res.status(200).json({
       message: 'Registration successful.',
-      token,
+     
     });
   } catch (error) {
     console.error('Error verifying OTP and registering user:', error);
@@ -232,9 +232,29 @@ const login = async (req, res) => {
     return res.status(500).json({ status: "error", error: "Internal server error" });
   }
 };
+
+
+const getUser = async (req , res)=>{
+  if (!req.user || !req.user.id) {
+    console.log("Unauthorized");
+    return res.status(401).json({ status: "error", error: "Unauthorized" });
+}
+  try{
+    const query = 'SELECT * FROM utilisateurs WHERE id = $1';
+    const result = await pool.query(query, [req.user.id]);
+  
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+      console.error(err);
+      return res.status(500).json({ status: "error", error: "Error fetching all certificates" });
+  }
+
+
+}
 module.exports = {
   registerUser,
   verifyOtpAndRegister,
   login,
-  resentOtp
+  resentOtp,
+  getUser
 };
